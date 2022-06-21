@@ -7,116 +7,141 @@ import datetime
 format_file = 'file_format.json'
 file_format = json.load(open(format_file))
 
-###########################################################
-### Function to narrow data to teams involved
-### input:  f = list of rows from data file
-###         rest of args: country name in string format
-### output: list of rows with data narrowed down
-###########################################################
-def teams(f,
+
+###############################################################################
+### function that returns true only if all supplied team values are equal to
+### the row of data supplied
+###     input:  row = row of data (list)
+###             home_team = desired home team (string)
+###             away_team = desired away team (string)
+###             anyteam_1/2 = desired team home or away (string)
+###     output: True if all conditions are met or no conditions supplied
+###             False if any condition is not met
+###############################################################################
+def teams(row,
         home_team = None,
         away_team = None,
-        any_team_1 = None,
-        any_team_2 = None):
+        anyteam_1 = None,
+        anyteam_2 = None):
 
-    if (home_team == away_team == any_team_1 == any_team_2 == None):
-        return f
-
-    returnlist = []
+    if (home_team == away_team == anyteam_1 == anyteam_2 == None):
+        return True
 
     home_index = file_format["home_team"]
     away_index = file_format["away_team"]
 
-    for row in f:
-        row_list = tools.convert_raw_row(row)
+    if (home_team != None and row[home_index] != home_team):
+        return False
 
-        if (row_list[home_index] in (any_country1, any_country2, home_country))
-        and (row_list[away_index] in (any_country1, any_country2, away_country)):
-            returnlist.append(row)
+    if (away_team != None and row[away_index] != away_team):
+        return False
 
-    return returnlist
+    if (any_team_1 != None and anyteam_1 not in (home_team,away_team)):
+        return False
 
-###########################################################
-### Function to narrow data to wining teams
-### input:  f = list of rows from data file
-###         team = name of winning team in string format
-### output: list of rows with data narrowed down
-###########################################################
-def winner(f,
-        team = None):
+    if (anyteam_2 != None and anyteam_2 not in (home_team,away_team)):
+        return False
 
-    if (team == None):
-        return f
+    return True
 
-    returnlist = []
 
-    winner_index = file_format["winner"]
-
-    for row in f:
-        row_list = tools.convert_raw_row(row)
-
-        if (row_list[winner_index] == team):
-            returnlist.append(row)
-
-    return returnlist
-
-###########################################################
-### Function to narrow data to venue played at
-### input:  f = list of rows from data file
-###         ground = name of ground match is played at in string format
-### output: list of rows with data narrowed down
-###########################################################
-def venue(f,
-        ground = None):
-
-    if (ground == None):
-        return f
-
-    returnlist = []
-
-    venue_index = file_format["venue"]
-
-    for row in f:
-        row_list = tools.convert_raw_row(row)
-
-        if (row_list[venue_index] == ground):
-            returnlist.append(row)
-
-    return returnlist
-
-###########################################################
-### Function to narrow data to date range
-### input:  f = list of rows from data file
-###         start_date = earliest match date in datetime format
-###         end_date = latest match date in datetime format
-### output: list of rows with data narrowed down
-###########################################################
-def date(f,
+###############################################################################
+### function that returns true only if match in row is from desired date range
+###     input:  row = row of data (list)
+###             start_date = earliest desired date (datetime)
+###             end_date = latest desired date (datetime)
+###     output: True if all conditions are met or no conditions supplied
+###             False if any condition is not met
+###############################################################################
+def date_range(row,
         start_date = None,
         end_date = None):
 
     if (start_date == end_date == None):
-        return f
-
-    returnlist = []
+        return True
 
     date_index = file_format["date"]
 
-    for row in f:
-        row_list = tools.convert_raw_row(row)
+    row_date = tools.convert_to_date_ymd(row)
 
-        row_date = tools.convert_to_date_ymd(row_list[date_index])
+    if (start_date != None and row_date < start_date):
+        return False
 
-        if (start_date != None):
-            if (end_date != None):
-                if (row_date >= start_date)
-                    and (row_date <= end_date):
-                    returnlist.append(row)
-            else:
-                if (row_date >= start_date):
-                    returnlist.append(row)
-        else if (end_date != None):
-            if (row_date <= end_date):
-                returnlist.append(row)
+    if (end_date != None and row_date > end_date):
+        return False
 
-    return returnlist
+    return True
+
+
+###############################################################################
+### function that returns true only if match is won by desired team
+###     input:  row = row of data (list)
+###             winning = desired winning team (string)
+###             not_winning = team not desired to win (string)
+###     output: True if all conditions are met or no conditions supplied
+###             False if any condition is not met
+###############################################################################
+def winner(row,
+        winning = None,
+        not_winning = None):
+
+    if (winning == not_winning == None):
+        return True
+
+    winner_index = file_format["winner"]
+
+    if (winning != None and row[winner_index] != winning):
+        return False
+
+    if (not_winning != None and row[winner_index] == not_winning):
+        return False
+
+    return True
+
+
+###############################################################################
+### function that returns true only if match takes place in desired location
+###     input:  row = row of data (list)
+###             venue = desired ground match is played at (string)
+###             city = desired city match is played at (string)
+###     output: True if all conditions are met or no conditions supplied
+###             False if any condition is not met
+###############################################################################
+def location(row,
+        venue = None,
+        city = None):
+
+    if (venue == city == None):
+        return True
+
+    venue_index = file_format["venue"]
+    city_index = file_format["city"]
+
+    if (venue != None and row[venue_index] != venue):
+        return False
+
+    if (city != None and row[city_index] != city):
+        return False
+
+    return True
+
+
+###############################################################################
+### function that returns true only if match is desired number in series
+###     input:  row = row of data (list)
+###             series_no = desired series match number (int)
+###     output: True if all conditions are met or no conditions supplied
+###             False if any condition is not met
+###############################################################################
+def series_number(row,
+        series_no = None):
+
+    if (series_no == None):
+        return True
+
+    series_no_index = file_format["series_number"]
+
+    if (series_no != None and row[series_no_index] != series_no):
+        return False
+
+    return True
