@@ -3,46 +3,48 @@ import sys
 import json
 import tools
 import datetime
+import pandas as pd
 
 format_file = 'file_format.json'
 file_format = json.load(open(format_file))
 
 
 ###############################################################################
-### function that returns true only if all supplied team values are equal to
-### the row of data supplied
-###     input:  row = row of data (list)
-###             home_team = desired home team (string)
-###             away_team = desired away team (string)
-###             anyteam_1/2 = desired team home or away (string)
-###     output: True if all conditions are met or no conditions supplied
-###             False if any condition is not met
+# function that returns rows of data that feature given teams
+#     input:  dat = dataframe
+#             home_team = desired home team (string)
+#             away_team = desired away team (string)
+#             anyteam_1/2 = desired team home or away (string)
+#     output: all rows of data that meet given conditions
 ###############################################################################
-def teams(row,
+def teams(dat,
         home_team = None,
         away_team = None,
         anyteam_1 = None,
         anyteam_2 = None):
 
+    returndat = dat.copy()
+
     if (home_team == away_team == anyteam_1 == anyteam_2 == None):
-        return True
+        return dat
 
-    home_index = file_format["home_team"]
-    away_index = file_format["away_team"]
+    if (home_team != None):
+        returndat = returndat[returndat["home_team"] == home_team]
 
-    if (home_team != None and row[home_index] != home_team):
-        return False
+    if (away_team != None):
+        returndat = returndat[returndat["away_team"] == away_team]
 
-    if (away_team != None and row[away_index] != away_team):
-        return False
+    if (anyteam_1 != None):
+        returndat_a = returndat[returndat["home_team"] == anyteam_1]
+        returndat_b = returndat[returndat["away_team"] == anyteam_1]
+        returndat = returndat_a.append(returndat_b)
 
-    if (any_team_1 != None and anyteam_1 not in (home_team,away_team)):
-        return False
+    if (anyteam_2 != None):
+        returndat_a = returndat[returndat["home_team"] == anyteam_2]
+        returndat_b = returndat[returndat["away_team"] == anyteam_2]
+        returndat = returndat_a.append(returndat_b)
 
-    if (anyteam_2 != None and anyteam_2 not in (home_team,away_team)):
-        return False
-
-    return True
+    return returndat.sort_values(by = "date")
 
 
 ###############################################################################
@@ -53,24 +55,22 @@ def teams(row,
 ###     output: True if all conditions are met or no conditions supplied
 ###             False if any condition is not met
 ###############################################################################
-def date_range(row,
+def date_range(dat,
         start_date = None,
         end_date = None):
 
     if (start_date == end_date == None):
-        return True
+        return dat
 
-    date_index = file_format["date"]
+    returndat = dat.copy()
 
-    row_date = tools.convert_to_date_ymd(row)
+    if (start_date != None):
+        returndat = returndat[returndat["date"] >= start_date]
 
-    if (start_date != None and row_date < start_date):
-        return False
+    if (end_date != None):
+        returndat = returndat[returndat["date"] <= end_date]
 
-    if (end_date != None and row_date > end_date):
-        return False
-
-    return True
+    return returndat
 
 
 ###############################################################################
@@ -81,22 +81,22 @@ def date_range(row,
 ###     output: True if all conditions are met or no conditions supplied
 ###             False if any condition is not met
 ###############################################################################
-def winner(row,
+def winner(dat,
         winning = None,
         not_winning = None):
 
     if (winning == not_winning == None):
-        return True
+        return dat
 
-    winner_index = file_format["winner"]
+    returndat = dat.copy()
 
-    if (winning != None and row[winner_index] != winning):
-        return False
+    if (winning != None):
+        returndat = returndat[returndat["winner"] == winning]
 
-    if (not_winning != None and row[winner_index] == not_winning):
-        return False
+    if (not_winning != None):
+        returndat = returndat[returndat["winner"] != not_winning]
 
-    return True
+    return returndat
 
 
 ###############################################################################
@@ -107,23 +107,22 @@ def winner(row,
 ###     output: True if all conditions are met or no conditions supplied
 ###             False if any condition is not met
 ###############################################################################
-def location(row,
+def location(dat,
         venue = None,
         city = None):
 
     if (venue == city == None):
-        return True
+        return dat
 
-    venue_index = file_format["venue"]
-    city_index = file_format["city"]
+    returndat = dat.copy()
 
-    if (venue != None and row[venue_index] != venue):
-        return False
+    if (venue != None):
+        returndat = returndat[returndat["venue"] == venue]
 
-    if (city != None and row[city_index] != city):
-        return False
+    if (city != None):
+        returndat = returndat[returndat["city"] == city]
 
-    return True
+    return returndat
 
 
 ###############################################################################
@@ -133,15 +132,15 @@ def location(row,
 ###     output: True if all conditions are met or no conditions supplied
 ###             False if any condition is not met
 ###############################################################################
-def series_number(row,
+def series_number(dat,
         series_no = None):
 
     if (series_no == None):
-        return True
+        return dat
 
-    series_no_index = file_format["series_number"]
+    returndat = dat.copy()
 
-    if (series_no != None and row[series_no_index] != series_no):
-        return False
+    if (series_no != None):
+        returndat = returndat[returndat["series_number"] == series_no]
 
-    return True
+    return returndat

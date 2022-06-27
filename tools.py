@@ -8,5 +8,6 @@ def convert_raw_row(row):
 
 def convert_to_date_ymd(string_date):
     date_list = string_date.split("/")
+    print(string_date, date_list)
 
-    return datetime.datetime(date_list[0],date_list[1],date_list[2])
+    return datetime.datetime(int(date_list[0]),int(date_list[1]),int(date_list[2]))
